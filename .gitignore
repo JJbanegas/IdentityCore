@@ -1,0 +1,71 @@
+# Carpetas de compilación
+bin/
+obj/
+.vs/
+.vscode/
+
+# Archivos de usuario de Visual Studio
+*.user
+*.suo
+*.sln.docstates
+*.userprefs
+*.vcxproj.user
+*.vcxproj.filters
+
+# JetBrains Rider
+.idea/
+*.sln.iml
+*.DotSettings.user
+riderModule.iml
+.rider/
+
+# Archivos temporales
+*.tmp
+*.temp
+*.log
+
+# Archivos de configuración local
+appsettings.Local.json
+appsettings.Production.json
+
+# Directorio de publicación
+publish/
+
+# NuGet
+*.nupkg
+*.snupkg
+*.symbols.nupkg
+.nuget/
+
+# Archivos generados
+*.g.cs
+
+# Archivos de caché
+.vs/
+.vscode/
+.cache/
+.nuget/
+
+# Archivos de compilación de Node.js (si se usa)
+node_modules/
+package-lock.json
+yarn.lock
+
+# Archivos del sistema operativo
+.DS_Store
+Thumbs.db
+.gitkeep
+
+# Archivos de pruebas
+coverage/
+TestResults/
+
+# Archivos de dependencias locales
+.m2/
+.gradle/
+
+# Archivos de configuración de IDE
+.classpath
+.project
+.settings/
+
