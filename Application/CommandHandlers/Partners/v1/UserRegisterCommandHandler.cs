@@ -1,29 +1,29 @@
 ﻿using Application.Commands.Partners.v1;
+using Company.BuildingBlocks.Contracts.ErrorHandling.Exceptions;
+using Company.BuildingBlocks.Contracts.Models;
 using Infrastructure.Interfaces;
 using MediatR;
 using Microsoft.AspNetCore.Identity;
 
 namespace Application.CommandHandlers.Partners.v1;
 
-public class UserRegisterCommandHandler : IRequestHandler<UserRegisterCommand, bool>
+public class UserRegisterCommandHandler : IRequestHandler<UserRegisterCommand, string>
 {
     private readonly IUnitOfWork _unitOfWork;
     private readonly UserManager<IdentityUser> _userManager;
 
-    public UserRegisterCommandHandler( //IRepository<Partner> partnerRepository,
+    public UserRegisterCommandHandler(
         IUnitOfWork unitOfWork, UserManager<IdentityUser> userManager)
     {
-        //_partnerRepository = partnerRepository;
         _unitOfWork = unitOfWork;
         _userManager = userManager;
     }
 
-    public async Task<bool> Handle(UserRegisterCommand request, CancellationToken cancellationToken)
+    public async Task<string> Handle(UserRegisterCommand request, CancellationToken cancellationToken)
     {
         var userExists = await _userManager.FindByEmailAsync(request.model.Email);
         if (userExists != null)
-            //return new AuthResponse { Success = false, Message = "El usuario ya existe" };
-            return false;
+            throw new ConflictException("FindByEmailAsync", $"Ya existe un usuario registrado con el mail {request.model.Email}");
 
         var user = new IdentityUser
         {
@@ -34,12 +34,15 @@ public class UserRegisterCommandHandler : IRequestHandler<UserRegisterCommand, b
 
         var result = await _userManager.CreateAsync(user, request.model.Password);
         if (!result.Succeeded)
-            //return new AuthResponse { Success = false, Message = string.Join(", ", result.Errors.Select(e => e.Description)) };
-            return false;
+        {
+            var errorMessage = string.Join(" | ", result.Errors.Select(e => e.Description));
+            throw new ConflictException("CreateAsync", errorMessage);
+        }
+        
         // Asignar rol por defecto
         await _userManager.AddToRoleAsync(user, "User");
+        await _unitOfWork.SaveChangesAsync();
 
-        //return new AuthResponse { Success = true, Message = "Usuario registrado exitosamente" };
-        return true;
+        return user.Id;
     }
 }

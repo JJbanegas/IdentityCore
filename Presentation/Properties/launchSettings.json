@@ -35,7 +35,7 @@
       "launchUrl": "swagger",
       "environmentVariables": {
         "ASPNETCORE_ENVIRONMENT": "Development",
-        "connectionstring" : "Server=localhost;Database=PartnersCoreDb;User=master;Password=sqlserver;TrustServerCertificate=True"
+        "connectionstring" : "Server=localhost;Database=IdentityCoreDb;User=master;Password=sqlserver;TrustServerCertificate=True"
       }
     }
   }

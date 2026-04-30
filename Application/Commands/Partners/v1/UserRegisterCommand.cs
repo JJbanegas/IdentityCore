@@ -3,7 +3,7 @@ using MediatR;
 
 namespace Application.Commands.Partners.v1;
 
-public class UserRegisterCommand : IRequest<bool>
+public class UserRegisterCommand : IRequest<string>
 {
     public UserRegisterCommand(UserRegisterRequestViewModel model)
     {
