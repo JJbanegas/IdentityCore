@@ -158,6 +158,10 @@ public class UserEndpoints : IEndpointDefinition
                 var result = await mediator.Send(new UserGetAllQuery());
                 return Results.Ok(ApiResponse<List<UserGetAllResponseViewModel>>.SuccessResponse(
                     result, "Usuarios obtenidos exitosamente"));
-            }).RequireAuthorization("UserOnly");
+            })
+            .Produces<ApiResponse<List<UserGetAllResponseViewModel>>>()
+            .Produces(StatusCodes.Status401Unauthorized)
+            .Produces(StatusCodes.Status403Forbidden)
+            .RequireAuthorization("AdminOnly");
     }
 }

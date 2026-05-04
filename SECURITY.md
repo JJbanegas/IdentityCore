@@ -169,9 +169,9 @@ No requiere body. Revoca el refresh token y borra la cookie.
 
 ---
 
-### GET `/api/v1/user/GetUsers` 🔒 `[AdminOnly]`
+### GET `/api/v1/user/GetUsers` 🔒 `[UserOnly]`
 
-Requiere token JWT con rol `Admin`.
+Requiere token JWT con rol `User`.
 
 **Header:** `Authorization: Bearer {accessToken}`
 

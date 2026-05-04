@@ -1,13 +1,11 @@
 ﻿using Application.Commands.Partners.v1;
 using Application.Mappings;
+using Company.BuildingBlocks.Contracts.Extensions;
 using IdentityCore.Services;
 using Infrastructure;
 using Infrastructure.Interfaces;
-using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.EntityFrameworkCore;
-using Microsoft.IdentityModel.Tokens;
 using Microsoft.OpenApi.Models;
-using System.Text;
 
 namespace IdentityCore.Helpers;
 
@@ -15,16 +13,37 @@ public static class ConfigurationExtensions
 {
     public static void SetConfigurationExtensions(IServiceCollection service, IConfiguration configuration)
     {
-        var jwtSettings = configuration.GetSection("JwtSettings");
-        var secretKey = jwtSettings["SecretKey"] ?? throw new InvalidOperationException("JWT SecretKey no configurado");
+        var connectionString = configuration.GetConnectionString("DefaultConnection")
+                               ?? Environment.GetEnvironmentVariable("connectionstring")
+                               ?? throw new InvalidOperationException("No se encontro configuracion de base de datos. Configura ConnectionStrings:DefaultConnection o la variable connectionstring.");
+        var allowedOrigins = configuration.GetSection("Cors:AllowedOrigins").Get<string[]>() ?? Array.Empty<string>();
+
+        service.AddCors(options =>
+        {
+            options.AddPolicy("DefaultCors", policy =>
+            {
+                if (allowedOrigins.Length == 0)
+                {
+                    policy.AllowAnyOrigin()
+                        .AllowAnyHeader()
+                        .AllowAnyMethod();
+                    return;
+                }
+
+                policy.WithOrigins(allowedOrigins)
+                    .AllowAnyHeader()
+                    .AllowAnyMethod()
+                    .AllowCredentials();
+            });
+        });
 
         service
             .AddDbContext<IdentityCoreDbContext>(options =>
-                options.UseSqlServer(Environment.GetEnvironmentVariable("connectionstring")))
+                options.UseSqlServer(connectionString))
             .AddSwaggerGen(options =>
             {
-                options.SwaggerDoc("v1", new() { Title = "IdentityCore API", Version = "v1" });
-                options.SwaggerDoc("v2", new() { Title = "IdentityCore API", Version = "v2" });
+                options.SwaggerDoc("v1", new() {Title = "IdentityCore API", Version = "v1"});
+                options.SwaggerDoc("v2", new() {Title = "IdentityCore API", Version = "v2"});
 
                 // Soporte JWT Bearer en Swagger UI
                 options.AddSecurityDefinition("Bearer", new OpenApiSecurityScheme
@@ -57,36 +76,12 @@ public static class ConfigurationExtensions
             .AddScoped(typeof(IRepository<>), typeof(Repository<>))
             .AddScoped<IRefreshTokenService, RefreshTokenService>()
             .AddScoped<IJwtTokenService, JwtTokenService>()
-            .AddMediatR(cfg => { cfg.RegisterServicesFromAssemblyContaining<PartnerCreateCommand>(); });
-
-        service.AddAuthentication(options =>
+            .AddMediatR(cfg => { cfg.RegisterServicesFromAssemblyContaining<PartnerCreateCommand>(); })
+            .AddBuildingBlocksJwtAuth(configuration, options =>
             {
-                options.DefaultAuthenticateScheme = JwtBearerDefaults.AuthenticationScheme;
-                options.DefaultChallengeScheme = JwtBearerDefaults.AuthenticationScheme;
-                options.DefaultScheme = JwtBearerDefaults.AuthenticationScheme;
-            })
-            .AddJwtBearer(options =>
-            {
-                options.TokenValidationParameters = new TokenValidationParameters
-                {
-                    ValidateIssuerSigningKey = true,
-                    IssuerSigningKey = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(secretKey)),
-                    ValidateIssuer = true,
-                    ValidIssuer = jwtSettings["Issuer"],
-                    ValidateAudience = true,
-                    ValidAudience = jwtSettings["Audience"],
-                    ValidateLifetime = true,
-                    ClockSkew = TimeSpan.Zero
-                };
+                options.AddPolicy("AdminOnly", p => p.RequireRole("Admin"));
+                options.AddPolicy("UserOnly", p => p.RequireRole("User"));
+                options.AddPolicy("AdminOrPartner", p => p.RequireRole("Admin", "Partner"));
             });
-
-        service.AddAuthorization(options =>
-        {
-            options.AddPolicy("AdminOnly", policy => policy.RequireRole("Admin"));
-            options.AddPolicy("UserOnly", policy => policy.RequireRole("User"));
-            options.AddPolicy("AdminOrPartner", policy => policy.RequireRole("Admin", "Partner"));
-            // Ejemplo para permisos granulares (futuro):
-            // options.AddPolicy("CanReadUsers", policy => policy.RequireClaim("permissions", "user:read"));
-        });
     }
 }

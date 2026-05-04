@@ -1,15 +1,14 @@
 using Company.BuildingBlocks.Contracts.Extensions;
-using Company.BuildingBlocks.Contracts.Models;
 using IdentityCore.Helpers;
 using Infrastructure;
 using Microsoft.AspNetCore.Authentication;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.EntityFrameworkCore;
-using System.Reflection;
 using ConfigurationExtensions = IdentityCore.Helpers.ConfigurationExtensions;
 
 var builder = WebApplication.CreateBuilder(args);
+var runMigrationsOnStartup = builder.Configuration.GetValue<bool>("Database:RunMigrationsOnStartup");
 
 // Pasa IConfiguration para que ConfigurationExtensions configure JWT Bearer y Swagger
 ConfigurationExtensions.SetConfigurationExtensions(builder.Services, builder.Configuration);
@@ -75,60 +74,19 @@ if (app.Environment.IsDevelopment())
         options.SwaggerEndpoint("/swagger/v1/swagger.json", "IdentityCore API v1");
         options.SwaggerEndpoint("/swagger/v2/swagger.json", "IdentityCore API v2");
     });
-    using (var scope = app.Services.CreateScope())
-    {
-        var dbContext = scope.ServiceProvider.GetRequiredService<IdentityCoreDbContext>();
-        dbContext.Database.Migrate();
-    }
+}
+
+if (runMigrationsOnStartup)
+{
+    using var scope = app.Services.CreateScope();
+    var dbContext = scope.ServiceProvider.GetRequiredService<IdentityCoreDbContext>();
+    dbContext.Database.Migrate();
 }
 
 app.UseHttpsRedirection();
+app.UseCors("DefaultCors");
 app.UseAuthentication();
 app.UseAuthorization();
-app.UseStatusCodePages(async statusCodeContext =>
-{
-    var httpContext = statusCodeContext.HttpContext;
-    if (!httpContext.Request.Path.StartsWithSegments("/api"))
-        return;
-
-    var status = httpContext.Response.StatusCode;
-    if (status is StatusCodes.Status401Unauthorized or StatusCodes.Status403Forbidden)
-    {
-        var detail = status == StatusCodes.Status401Unauthorized
-            ? "Debes enviar un bearer token valido para acceder a este recurso."
-            : "No tienes permisos suficientes para acceder a este recurso.";
-
-        if (httpContext.Response.HasStarted)
-            return;
-
-        object payload;
-
-        // Intentamos usar el helper central del paquete compartido para mantener consistencia.
-        var responseType = typeof(ApiResponse<string>);
-        var errorFactory = responseType.GetMethod(
-            "ErrorResponse",
-            BindingFlags.Public | BindingFlags.Static,
-            [typeof(string)]);
-
-        if (errorFactory != null)
-        {
-            payload = errorFactory.Invoke(null, [detail])!;
-        }
-        else
-        {
-            // Fallback seguro si el paquete no expone ErrorResponse(string).
-            payload = new
-            {
-                success = false,
-                message = detail,
-                data = (string?)null,
-                statusCode = status
-            };
-        }
-
-        httpContext.Response.ContentType = "application/json";
-        await httpContext.Response.WriteAsJsonAsync(payload);
-    }
-});
 app.RegisterEndpointDefinitions();
+app.MapGet("/health", () => Results.Ok(new { status = "ok", service = "IdentityCore", utc = DateTime.UtcNow }));
 app.Run();
