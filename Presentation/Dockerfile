@@ -17,6 +17,12 @@ COPY ["Presentation/Presentation.csproj", "Presentation/"]
 COPY ["Infrastructure/Infrastructure.csproj", "Infrastructure/"]
 COPY ["Application/Application.csproj", "Application/"]
 COPY ["Domain/Domain.csproj", "Domain/"]
+
+RUN dotnet nuget update source github \
+    --username "$GITHUB_USERNAME" \
+    --password "$GITHUB_TOKEN" \
+    --store-password-in-clear-text
+
 RUN dotnet restore "./Presentation/Presentation.csproj"
 COPY . .
 WORKDIR "/src/Presentation"
