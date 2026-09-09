@@ -18,6 +18,18 @@ COPY ["Infrastructure/Infrastructure.csproj", "Infrastructure/"]
 COPY ["Application/Application.csproj", "Application/"]
 COPY ["Domain/Domain.csproj", "Domain/"]
 
+ARG GITHUB_USERNAME
+ARG GITHUB_TOKEN
+
+RUN test -n "$GITHUB_USERNAME" \
+    && echo "GITHUB_USERNAME configurado" \
+    || (echo "GITHUB_USERNAME NO configurado" && exit 1)
+
+RUN test -n "$GITHUB_TOKEN" \
+    && echo "GITHUB_TOKEN configurado" \
+    || (echo "GITHUB_TOKEN NO configurado" && exit 1)
+
+
 RUN dotnet nuget update source github \
     --username "$GITHUB_USERNAME" \
     --password "$GITHUB_TOKEN" \
