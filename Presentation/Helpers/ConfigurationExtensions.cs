@@ -13,9 +13,10 @@ public static class ConfigurationExtensions
 {
     public static void SetConfigurationExtensions(IServiceCollection service, IConfiguration configuration)
     {
-        var connectionString = configuration.GetConnectionString("DefaultConnection")
-                               ?? Environment.GetEnvironmentVariable("connectionstring")
-                               ?? throw new InvalidOperationException("No se encontro configuracion de base de datos. Configura ConnectionStrings:DefaultConnection o la variable connectionstring.");
+        var connectionString = "Host=dpg-dagantbl550s73baaom0-a.oregon-postgres.render.com; Database=planifest_postgres; Username=planifestadmin; Password=77G2mv2mVartDIlkaY94hXtR4dEWKj53; Include Error Detail = true;";
+            //configuration.GetConnectionString("DefaultConnection")
+                               //?? Environment.GetEnvironmentVariable("connectionstring")
+                               //?? throw new InvalidOperationException("No se encontro configuracion de base de datos. Configura ConnectionStrings:DefaultConnection o la variable connectionstring.");
         var allowedOrigins = configuration.GetSection("Cors:AllowedOrigins").Get<string[]>() ?? Array.Empty<string>();
 
         service.AddCors(options =>
@@ -39,7 +40,7 @@ public static class ConfigurationExtensions
 
         service
             .AddDbContext<IdentityCoreDbContext>(options =>
-                options.UseSqlServer(connectionString))
+                options.UseNpgsql(connectionString))
             .AddSwaggerGen(options =>
             {
                 options.SwaggerDoc("v1", new() {Title = "IdentityCore API", Version = "v1"});

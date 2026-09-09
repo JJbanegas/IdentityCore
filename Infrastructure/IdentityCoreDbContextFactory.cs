@@ -8,7 +8,7 @@ public class IdentityCoreDbContextFactory : IDesignTimeDbContextFactory<Identity
     public IdentityCoreDbContext CreateDbContext(string[] args)
     {
         var optionsBuilder = new DbContextOptionsBuilder<IdentityCoreDbContext>();
-        optionsBuilder.UseSqlServer(Environment.GetEnvironmentVariable("connectionstring"));
+        optionsBuilder.UseNpgsql(Environment.GetEnvironmentVariable("connectionstring"));
 
         return new IdentityCoreDbContext(optionsBuilder.Options);
     }

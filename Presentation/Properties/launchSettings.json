@@ -33,10 +33,11 @@
       "commandName": "IISExpress",
       "launchBrowser": true,
       "launchUrl": "swagger",
-      "environmentVariables": {
-        "ASPNETCORE_ENVIRONMENT": "Development",
-        "connectionstring" : "Server=localhost;Database=IdentityCoreDb;User=master;Password=sqlserver;TrustServerCertificate=True"
-      }
+        "environmentVariables": {
+            "ASPNETCORE_ENVIRONMENT": "Development",
+            //"connectionstring": "Server=localhost;Database=IdentityCoreDb;User=postgres;Password=postgresql;TrustServerCertificate=True"
+            "connectionstring": "Host=localhost; Database=IdentityCoreDb; Username=postgres; Password=postgresql; Include Error Detail = true;"
+        }
     }
   }
 }

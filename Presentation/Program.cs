@@ -53,6 +53,13 @@ builder.Services.AddBuildingBlocks();
 
 var app = builder.Build();
 
+if (runMigrationsOnStartup)
+{
+    using var scope = app.Services.CreateScope();
+    var dbContext = scope.ServiceProvider.GetRequiredService<IdentityCoreDbContext>();
+    dbContext.Database.Migrate();
+}
+
 // Seed de roles en TODOS los entornos (idempotente: solo crea si no existe)
 using (var scope = app.Services.CreateScope())
 {
@@ -76,12 +83,6 @@ if (app.Environment.IsDevelopment())
     });
 }
 
-if (runMigrationsOnStartup)
-{
-    using var scope = app.Services.CreateScope();
-    var dbContext = scope.ServiceProvider.GetRequiredService<IdentityCoreDbContext>();
-    dbContext.Database.Migrate();
-}
 
 app.UseHttpsRedirection();
 app.UseCors("DefaultCors");
