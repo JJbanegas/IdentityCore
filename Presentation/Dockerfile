@@ -12,6 +12,7 @@ EXPOSE 8081
 FROM mcr.microsoft.com/dotnet/sdk:9.0 AS build
 ARG BUILD_CONFIGURATION=Release
 WORKDIR /src
+COPY ["NuGet.config", "."]
 COPY ["Presentation/Presentation.csproj", "Presentation/"]
 COPY ["Infrastructure/Infrastructure.csproj", "Infrastructure/"]
 COPY ["Application/Application.csproj", "Application/"]
